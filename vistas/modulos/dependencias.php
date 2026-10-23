@@ -5,7 +5,7 @@
       <div class="col-sm-6">
         <h1><i class="fas fa-building mr-2"></i> Gestión de Dependencias</h1>
         <p class="text-muted mb-0">
-          RF-40 · RF-41 · RNF-14 — Administre las dependencias y unidades administrativas registradas en el sistema.
+          RF-40 · RF-41 · RNF-14 — Administre las dependencias y asigne los usuarios responsables de cada área institucional.
         </p>
       </div>
       <div class="col-sm-6">
@@ -24,11 +24,11 @@
 
     <!-- Tarjetas de métricas informativas (Actualizadas asíncronamente vía API REST) -->
     <div class="row">
-      <div class="col-lg-4 col-sm-6 col-12">
+      <div class="col-lg-3 col-sm-6 col-12">
         <div class="small-box bg-info">
           <div class="inner">
             <h3 id="kpiTotalDependencias">--</h3>
-            <p>Total de dependencias</p>
+            <p>Total dependencias</p>
           </div>
           <div class="icon">
             <i class="fas fa-building"></i>
@@ -36,7 +36,7 @@
         </div>
       </div>
 
-      <div class="col-lg-4 col-sm-6 col-12">
+      <div class="col-lg-3 col-sm-6 col-12">
         <div class="small-box bg-success">
           <div class="inner">
             <h3 id="kpiDependenciasActivas">--</h3>
@@ -48,7 +48,7 @@
         </div>
       </div>
 
-      <div class="col-lg-4 col-sm-12 col-12">
+      <div class="col-lg-3 col-sm-6 col-12">
         <div class="small-box bg-warning">
           <div class="inner">
             <h3 id="kpiDependenciasInactivas">--</h3>
@@ -56,6 +56,18 @@
           </div>
           <div class="icon">
             <i class="fas fa-ban"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-sm-6 col-12">
+        <div class="small-box bg-primary">
+          <div class="inner">
+            <h3 id="kpiConEncargado">--</h3>
+            <p>Con encargado asignado</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-user-shield"></i>
           </div>
         </div>
       </div>
@@ -80,12 +92,13 @@
           <thead class="bg-primary text-white">
             <tr>
               <th width="70">ID</th>
-              <th width="140">Código / Sigla</th>
+              <th width="130">Código / Sigla</th>
               <th>Nombre</th>
+              <th>Encargado / Responsable</th>
               <th>Descripción</th>
-              <th width="120" class="text-center">Usuarios</th>
-              <th width="120" class="text-center">Estado</th>
-              <th width="200" class="text-center">Acciones</th>
+              <th width="90" class="text-center">Usuarios</th>
+              <th width="100" class="text-center">Estado</th>
+              <th width="180" class="text-center">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -96,6 +109,7 @@
               <th>ID</th>
               <th>Código / Sigla</th>
               <th>Nombre</th>
+              <th>Encargado / Responsable</th>
               <th>Descripción</th>
               <th class="text-center">Usuarios</th>
               <th class="text-center">Estado</th>

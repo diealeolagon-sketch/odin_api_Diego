@@ -114,10 +114,14 @@ function poblarSelectDependencias(dependencias) {
 function asignarEncargadoPorDependencia(idDependencia) {
     const dep = catalogoDependencias.find(d => String(d.id_dependencia) === String(idDependencia));
 
-    if (dep && dep.id_responsable && dep.nombre_responsable) {
-        const rolTexto = dep.rol_responsable ? ` (${dep.rol_responsable})` : "";
-        $("#responsable").val(dep.id_responsable);
-        $("#responsableVisible").val(`${dep.nombre_responsable}${rolTexto}`);
+    const idResp = dep ? (dep.id_responsable || dep.id_usuario_responsable) : null;
+    const nomResp = dep ? (dep.nombre_responsable || dep.encargado_nombre) : null;
+    const rolResp = dep ? (dep.rol_responsable || dep.encargado_rol) : "";
+
+    if (dep && idResp && nomResp) {
+        const rolTexto = rolResp ? ` (${rolResp})` : "";
+        $("#responsable").val(idResp);
+        $("#responsableVisible").val(`${nomResp}${rolTexto}`);
         resaltarResponsableAutollenado();
         actualizarResumen();
         return;

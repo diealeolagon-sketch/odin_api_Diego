@@ -36,7 +36,8 @@ class TestRadicacionApi
     private static function ejecutarWorker(string $caso, string $extra = ""): string
     {
         $archivoActual = escapeshellarg(__FILE__);
-        $cmd = "php {$archivoActual} --worker={$caso} {$extra}";
+        $phpBin = defined('PHP_BINARY') && PHP_BINARY ? escapeshellarg(PHP_BINARY) : 'php';
+        $cmd = "{$phpBin} {$archivoActual} --worker={$caso} {$extra}";
         return (string)shell_exec($cmd);
     }
 

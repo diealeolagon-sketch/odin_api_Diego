@@ -6,7 +6,8 @@ require_once __DIR__ . "/../api/helpers/respuesta.helper.php";
 /**
  * ControladorDependencias
  * 
- * Controlador RESTful para la gestión de dependencias institucionales.
+ * Controlador RESTful para la gestión de dependencias institucionales
+ * y la administración de encargados responsables de área.
  * Cumple con RF-40, RF-41 y RNF-14.
  */
 class ControladorDependencias {
@@ -58,12 +59,13 @@ class ControladorDependencias {
     API REST: CREAR DEPENDENCIA (POST /api/dependencias)
     =============================================*/
     public static function ctrCrear(array $datos): void {
-        $nombre      = trim($datos["nombre"] ?? "");
-        $codigo      = strtoupper(trim($datos["codigo"] ?? $datos["dependencia"] ?? ""));
-        $descripcion = trim($datos["descripcion"] ?? "");
-        $tipo        = strtolower(trim($datos["tipo"] ?? "operativa"));
-        $estadoRaw   = trim($datos["estado"] ?? "Activo");
-        $estado      = in_array($estadoRaw, ["Activo", "Activa"], true) ? "Activo" : "Inactivo";
+        $nombre        = trim($datos["nombre"] ?? "");
+        $codigo        = strtoupper(trim($datos["codigo"] ?? $datos["dependencia"] ?? ""));
+        $descripcion   = trim($datos["descripcion"] ?? "");
+        $tipo          = strtolower(trim($datos["tipo"] ?? "operativa"));
+        $estadoRaw     = trim($datos["estado"] ?? "Activo");
+        $estado        = in_array($estadoRaw, ["Activo", "Activa"], true) ? "Activo" : "Inactivo";
+        $idResponsable = !empty($datos["id_usuario_responsable"]) ? (int)$datos["id_usuario_responsable"] : null;
 
         if (empty($nombre) || empty($codigo)) {
             RespuestaHelper::error("El nombre y el código/sigla de la dependencia son obligatorios", 400);
@@ -84,12 +86,13 @@ class ControladorDependencias {
         }
 
         $idNuevo = ModeloDependencias::mdlCrearDependencia([
-            "nombre"      => $nombre,
-            "codigo"      => $codigo,
-            "dependencia" => $nombre,
-            "descripcion" => $descripcion !== "" ? $descripcion : ("Unidad organizacional: " . $nombre),
-            "tipo"        => $tipo,
-            "estado"      => $estado
+            "nombre"                 => $nombre,
+            "codigo"                 => $codigo,
+            "dependencia"            => $nombre,
+            "descripcion"            => $descripcion !== "" ? $descripcion : ("Unidad organizacional: " . $nombre),
+            "tipo"                   => $tipo,
+            "estado"                 => $estado,
+            "id_usuario_responsable" => $idResponsable
         ]);
 
         if ($idNuevo) {
@@ -108,12 +111,17 @@ class ControladorDependencias {
             RespuestaHelper::error("La dependencia que intenta actualizar no existe", 404);
         }
 
-        $nombre      = trim($datos["nombre"] ?? "");
-        $codigo      = strtoupper(trim($datos["codigo"] ?? $existente["codigo"] ?? ""));
-        $descripcion = trim($datos["descripcion"] ?? $existente["descripcion"] ?? "");
-        $tipo        = strtolower(trim($datos["tipo"] ?? $existente["tipo"] ?? "operativa"));
-        $estadoRaw   = trim($datos["estado"] ?? $existente["estado"] ?? "Activo");
-        $estado      = in_array($estadoRaw, ["Activo", "Activa"], true) ? "Activo" : "Inactivo";
+        $nombre        = trim($datos["nombre"] ?? "");
+        $codigo        = strtoupper(trim($datos["codigo"] ?? $existente["codigo"] ?? ""));
+        $descripcion   = trim($datos["descripcion"] ?? $existente["descripcion"] ?? "");
+        $tipo          = strtolower(trim($datos["tipo"] ?? $existente["tipo"] ?? "operativa"));
+        $estadoRaw     = trim($datos["estado"] ?? $existente["estado"] ?? "Activo");
+        $estado        = in_array($estadoRaw, ["Activo", "Activa"], true) ? "Activo" : "Inactivo";
+
+        $idResponsable = null;
+        if (isset($datos["id_usuario_responsable"]) && $datos["id_usuario_responsable"] !== "" && $datos["id_usuario_responsable"] !== null) {
+            $idResponsable = (int)$datos["id_usuario_responsable"];
+        }
 
         if (empty($nombre) || empty($codigo)) {
             RespuestaHelper::error("El nombre y el código/sigla son obligatorios para actualizar", 400);
@@ -130,12 +138,13 @@ class ControladorDependencias {
         }
 
         $actualizado = ModeloDependencias::mdlEditarDependencia($id, [
-            "nombre"      => $nombre,
-            "codigo"      => $codigo,
-            "dependencia" => $nombre,
-            "descripcion" => $descripcion !== "" ? $descripcion : ("Unidad organizacional: " . $nombre),
-            "tipo"        => $tipo,
-            "estado"      => $estado
+            "nombre"                 => $nombre,
+            "codigo"                 => $codigo,
+            "dependencia"            => $nombre,
+            "descripcion"            => $descripcion !== "" ? $descripcion : ("Unidad organizacional: " . $nombre),
+            "tipo"                   => $tipo,
+            "estado"                 => $estado,
+            "id_usuario_responsable" => $idResponsable
         ]);
 
         if ($actualizado) {
@@ -149,20 +158,19 @@ class ControladorDependencias {
     API REST: CAMBIAR ESTADO (PATCH /api/dependencias/{id}/estado)
     =============================================*/
     public static function ctrCambiarEstado(int $id, string $nuevoEstado): void {
-        $estadoNormalizado = in_array($nuevoEstado, ["Activo", "Activa"], true) ? "Activo" : (in_array($nuevoEstado, ["Inactivo", "Inactiva"], true) ? "Inactivo" : "");
-        if ($estadoNormalizado === "") {
-            RespuestaHelper::error("El estado especificado no es válido (debe ser Activo o Inactivo)", 400);
-        }
+        $estadoNormalizado = (strtolower(trim($nuevoEstado)) === "inactivo") ? "Inactivo" : "Activo";
 
         $existente = ModeloDependencias::mdlMostrarDependencias("dependencias", "id_dependencia", $id);
         if (!$existente) {
-            RespuestaHelper::error("La dependencia a modificar no existe", 404);
+            RespuestaHelper::error("La dependencia solicitada no existe", 404);
         }
 
-        $resultado = ModeloDependencias::mdlActualizarEstado($id, $estadoNormalizado);
-
-        if ($resultado) {
-            RespuestaHelper::exito(["nuevoEstado" => $estadoNormalizado], "Estado de la dependencia actualizado correctamente");
+        $actualizado = ModeloDependencias::mdlActualizarEstado($id, $estadoNormalizado);
+        if ($actualizado) {
+            RespuestaHelper::exito([
+                "id_dependencia" => $id,
+                "estado"         => $estadoNormalizado
+            ], "Estado de dependencia actualizado a {$estadoNormalizado}");
         } else {
             RespuestaHelper::error("No fue posible cambiar el estado de la dependencia", 500);
         }
@@ -180,18 +188,18 @@ class ControladorDependencias {
         $resultado = ModeloDependencias::mdlEliminarDependencia($id);
 
         if ($resultado === "ok") {
-            RespuestaHelper::exito([], "La dependencia fue eliminada correctamente", 200);
+            RespuestaHelper::exito(["id_dependencia" => $id], "Dependencia eliminada del sistema");
         } elseif ($resultado === "en_uso") {
-            RespuestaHelper::error("No se puede eliminar esta dependencia porque tiene usuarios o radicados asociados. Desactívela en su lugar.", 409);
+            RespuestaHelper::error("No se puede eliminar la dependencia porque tiene usuarios o radicados vinculados", 409);
         } else {
             RespuestaHelper::error("Error interno al intentar eliminar la dependencia", 500);
         }
     }
 
-    /*=============================================
-    COMPATIBILIDAD HEREDADA
-    =============================================*/
-    public static function ctrMostrarDependencias($campo = null, $valor = null) {
-        return ModeloDependencias::mdlMostrarDependencias("dependencias", $campo, $valor);
+    /**
+     * Método retrocompatible para llamadas PHP directas desde vistas antiguas.
+     */
+    public static function ctrMostrarDependencias($tabla = "dependencias") {
+        return ModeloDependencias::mdlMostrarDependencias($tabla);
     }
 }

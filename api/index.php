@@ -173,8 +173,9 @@ if ($recurso === "dependencias") {
         ControladorDependencias::ctrListar();
     }
 
+
     // GET /api/dependencias/{id}/responsable -> Encargado del área de la dependencia
-    if (is_numeric($param1) && $param2 === "responsable") {
+    if ($metodo === "GET" && is_numeric($param1) && $param2 === "responsable") {
         ControladorRadicados::ctrObtenerResponsableDependencia((int)$param1);
     }
 
@@ -322,15 +323,9 @@ if ($recurso === "roles" && $metodo === "GET") {
     RespuestaHelper::exito($roles, "Listado de roles obtenido correctamente");
 }
 
-if ($recurso === "dependencias" && $metodo === "GET") {
-    // GET /api/dependencias/{id}/responsable -> Encargado del área de la dependencia
-    if (is_numeric($param1) && $param2 === "responsable") {
-        ControladorRadicados::ctrObtenerResponsableDependencia((int)$param1);
-    }
 
-    $dependencias = ModeloDependencias::mdlMostrarDependencias("dependencias");
-    RespuestaHelper::exito($dependencias, "Listado de dependencias obtenido correctamente");
-}
+
+
 
 if ($recurso === "tramites" && $metodo === "GET") {
     $catalogos = ModeloRadicados::mdlObtenerCatalogos();
